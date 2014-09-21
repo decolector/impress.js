@@ -14,6 +14,8 @@
  *  version: 0.5.3
  *  url:     http://bartaz.github.com/impress.js/
  *  source:  http://github.com/bartaz/impress.js/
+ *
+ * forked by decolector: https://github.com/decolector/impress.js
  */
 
 /*jshint bitwise:true, curly:true, eqeqeq:true, forin:true, latedef:true, newcap:true,
@@ -325,6 +327,11 @@
         
         // array of step elements
         var steps = null;
+
+        //index of clicks
+        var click_num = null;
+
+        var total_clicks = null;
         
         // configuration options
         var config = null;
@@ -481,7 +488,12 @@
                 rotate:    { x: 0, y: 0, z: 0 },
                 scale:     1
             };
-            
+            total_clicks = steps.length;
+            steps.forEach(function(step){
+                total_clicks += getSubsteps(step).length;
+            });
+            click_num = 0;
+
             initialized = true;
             
             triggerEvent(root, "impress:init", { api: roots[ "impress-root-" + rootId ] });
@@ -636,7 +648,11 @@
         // `prev` API function goes to previous step (in document order)
         // or backs up one stubstep if a present substep is found
         var prev = function () {
-
+            if(click_num < 0){
+                click_num = total_clicks;
+            }else{
+               click_num--;
+            }
             if (getPresentSubstep(activeStep)) {
                 // if this step has a substep in present state
                 // substepBackward. This is not exposed in API
@@ -652,6 +668,11 @@
         
         // `next` API function goes to next step (in document order)
         var next = function () {
+            if(click_num > total_clicks){
+                click_num = 0;
+            }else{
+               click_num++;
+            }
             if (getNextSubstep(activeStep)) {
                 // if a future substep is found in this step
                 // substepForward.  This is not exposed in API 
@@ -664,6 +685,14 @@
                 return goto(next);
             }
         };
+
+        var getClickNum = function(){
+            return click_num;
+        }
+
+        var getTotalClicks = function(){
+            return total_clicks;
+        }
 
         
         // Adding some useful classes to step elements.
@@ -737,7 +766,9 @@
             init: init,
             goto: goto,
             next: next,
-            prev: prev
+            prev: prev,
+            getClickNum: getClickNum,
+            getTotalClicks: getTotalClicks
         });
 
     };
